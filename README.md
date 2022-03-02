@@ -80,3 +80,107 @@ The "distribution ID" for the CloudFront front end of your repository.  This
 is used to create cache invalidations to ensure new or updatd content becomes
 available to consumers immediately.
 
+## Setting Up A Content Library Repository From Scratch (Step by Step)
+
+### Step 1 - Set up CloudBolt CMP.
+A CloudBolt CMP server will be needed to access the new Content Library.
+See the CloudBolt CMP documentation for instructions on getting it set
+up, licensed, and running.
+
+### Step 2 - AWS and GitHub access.
+Create or obtain access to an AWS admin/root account and a GitHub account with
+the ability to create a new repository.  The AWS account should have permission
+to crate and manage S3 buckets, CloudFront distributions, and API users.
+The process of obtaining or setting up AWS and GitHub access is beyond the
+scope of this README.  Contact your system administrator, if needed.
+
+The Content Library workflows will need the following:
+- Input "aws-account-id": The AWS account ID. (From your AWS account)
+- Input "aws-default-region": The AWS region. (e.g. "us-east-1")
+
+### Step 3 - Create the primary S3 bucket
+The Content Library uses S3 buckets to store its data, with CloudFront as
+a content distribution front end.  Also, an optional "backup" S3 bucket can
+be created separately to allow the Content Library workflows to automatically
+back up previous versions of content on update.  The "backup" bucket does
+not need a CloudFront distribution.
+
+The Content Library workflows will need the following:
+- Input "aws-s3-bucket": For this demo, "content-library-demo".
+
+Follow these steps as an example:
+- Log into the AWS management console.
+- Use the "search" box next to the "aws" and "Services" button in the upper left corner.
+- Search for "S3" and click on S3 to open it.
+- Note: S3 may also already be in your favorites or recently used list.
+- In the left side bar, make sure "Buckets" is selected.
+- In the "Buckets" panel, click the "Create bucket" button.
+- Select a name for the bucket.
+- For this example, we will name the bucket "content-library-demo".
+- Select an AWS region for the bucket.
+- For this example, we will use "us-east-1".
+- Under "Object Ownership" make sure "ACLs disable" is checked.
+- Under "Block Public Access settings..." make sure "Block all public access" is checked.
+- Under "Bucket Versioning" make sure "Disable" is checked.
+- Under "Tags", there do not need to be any tags.
+- Under "Default encryption" make sure "Enable" is checked.
+- Check encryption key type "Amazon S3-managed keys (SSE-S3)"
+- Under "Advanced settings" check "Disable" for "Object Lock".
+- Click "Create Bucket"
+
+### Step 4 - Create the backup S3 bucket (Optional)
+The backup bucket can be the same bucket as the main Content Library bucket.
+For this example, we will use a separate backup bucket.
+TBD - Do we want to allow "none" (see above) to mean "don't backup"?
+
+The Content Library workflows will need the following:
+- Input "aws-s3-backup-bucket": For this demo, "content-library-demo-backup".
+
+Follow the instructions from Step 3 above using the backup bucket name
+instead of the main bucket name.  All other S3 bucket options should be the same.
+
+### Step 5 - Create a CloudFront Distribution
+
+The Content Library workflows will need the following:
+- Input "aws-cloudfront-distribution-id": The CloudFront distribution ID noted below.
+
+To use the new content Library, CMS will need:
+- The origin domain obtained below.
+
+Follow these steps as an example:
+- Log into the AWS management console.
+- Use the "search" box next to the "aws" and "Services" button in the upper left corner.
+- Search for "CloudFront" and click on CloudFront to open it.
+- Note: CloudFront may also already be in your favorites or recently used list.
+- In the left side bar, make sure "Distributions" is selected.
+- In the "Distributions" panel, click the "Create distribution" button.
+- Click on the "Origin domain" search box.  This will open a pop up list.
+- Select the domain containing the Bucket name (e.g. "content-library-demo") from above.
+- The selected domain will look similar to "content-library-demo.s3.us-east-1.amazonaws.com".
+- Leave "Origin path" blank.
+- The "Name" field should already be the same as "Origin domain".  Leave it as is.
+- Under "S3 bucket access", check "Yes use OAI...".
+- Click the "Create new OAI" button.  Accept the defaut name.
+- OAI name will look like "access-identity-content-library-demo.s3.us-east-1.amazonaws.com".
+- Under Bucket policy, check "No, I will update the bucket policy".
+- No custom headers need to be added.
+- Under "Enable Origin Shield" check "No".
+- No changes are needed to "Additional settings".
+- Leave all other settings on defaults.
+- Click "Create Distribution".
+- Note the distribution ID for workflow input "aws-cloudfront-distribution-id".
+
+### Step 6 - Add AWS API User
+
+### Step 7 - Create AWS Policy for S3 and CloudFront Permissions
+
+### Step 8 - Create Role Mapping Policy to API User.
+
+### Step 9 - Create GitHub Content Library Repository.
+
+### Step 10 - Create Workflow(s).
+
+### Step 11 - Test Content Creations.
+
+
+

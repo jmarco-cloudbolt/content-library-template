@@ -172,9 +172,120 @@ Follow these steps as an example:
 
 ### Step 6 - Add AWS API User
 
+The Content Library GitHub workflows require an AWS user identity with a minimal
+set of permissions restricted to your S3 bucket and CloudFront distribution in order
+to be able to publish content.  The example steps below set up a minimal per-bucket
+user for this purpose.  The resulting IAM user can be additionally configured according
+to site needs and policies as long as it has the minimum access to S3 and CloudFront.
+
+Note: Don't forget to copy the access key secret somewhere after the user creation
+succeeds, since AWS will never display it again after leaving that page.  If you
+forget to do this, however, you can always generate a new access key and secret
+for the user.
+
+The workflow Secret "aws-access-key-secret" is the one piece of information that
+must be stored in your GitHub repository's "secrets" cache. (See below)
+
+The Content Library workflows will need the following:
+- Input "aws-access-key-id": The AWS access key ID for the user created here.
+- Secret "aws-access-key-secret": The secret for the above access key.
+
+Follow these steps as an example:
+- Log into the AWS management console.
+- Use the "search" box next to the "aws" and "Services" button in the upper left corner.
+- Search for "IAM" and click on "IAM" to open it.
+- Note: IAM may also already be in your favorites or recently used list.
+- In the left side bar, make sure "Users" is selected.
+- Click the "Add new users" button.
+- Select a user name.  For this demo, we will use "ContentLibraryDemo".
+- Under "Select AWS credential type" check "Access key..."
+- Leave "Password..." unchecked -- User does not require console or UI access.
+- Click the "Next: Permissions" button at the bottom of the page.
+- Nothing needs to be done for "Set permissions" or "Set permission boundary".
+- Click the "Next: Tags" button at the bottom of the page.
+- No tags are needed.
+- Click the "Next: Review" button at the bottom of the page.
+- A warning on the page will indicate the user has no permissions.  This is expected.
+- Permissions will be added later.
+- Click the "Create user" button at the bottom of the page.
+- Don't forget to save the resulting "Access key ID" and "Secret access key" values.
+
 ### Step 7 - Create AWS Policy for S3 and CloudFront Permissions
 
+Follow these steps as an example:
+- Log into the AWS management console.
+- Use the "search" box next to the "aws" and "Services" button in the upper left corner.
+- Search for "IAM" and click on "IAM" to open it.
+- Note: IAM may also already be in your favorites or recently used list.
+- In the left side bar, make sure "Policies" is selected.
+- Click the "Create Policy" button.
+- Within the "Visual Editor" tab, expand "Service"
+- Inside the "Select a service" pane, click "Choose a service".
+- Enter "S3" in the "Find a service" search box.
+- Click "S3"
+- Scroll down the page a bit.
+- Within the "Visual Editor" tab, expand "Actions".  This will unexpand "Service".
+- Leave "Filter actions" blank.
+- Leave "All S3 actions" unchecked.
+- Expand "List" and check ONLY "ListBucket".
+- Expand "Read" and check ONLY "GetBucketLocation" and "GetObject".
+- Expand "Write" and check ONLY "DeleteObject" and "PutObject".
+- Scroll down the page a bit.
+- Within the "Visual Editor" tab, expand "Resources".  This will unexpand "Actions".
+- Make sure "Specific" is checked and "All resources" is unchecked. 
+- Under "bucket", enter an ARN like "arn:aws:s3:::ContentLibraryDemo".
+- For the above step, change "ContentLibraryDemo" to your bucket name if different.
+- Under "object", enter an ARN like "arn:aws:s3:::ContentLibraryDemo/\*".
+- Again, for the above step, change "ContentLibraryDemo" if different.
+- Scroll down the page a bit.
+- Expand "Request conditions".
+- Leave "MFA required" and "Source IP" unchecked.
+- This completes permissions for S3.  We must also add one permission for CloudFront.
+- Within the "Visual Editor" pane, unexpand "S3" to free up room on the page.
+- At the bottom of the visual editor pane, click "Add additional permissions".
+- In the newly created permission box, click "Choose a service".
+- Enter "CloudFront" in the text search box.
+- Click CloudFront.  This will rename the permission box to "CloudFront".
+- The "Actions" section should already be expanded.
+- Leave "Filter actions" blank.
+- Leave "All CloudFront actions" unchecked.
+- Under "Access level", Expand "Write" and check ONLY "CreateInvalidation".
+- Scroll down the page a bit.
+- Within the "CloudFront" permission box, expand "Resources".  This will unexpand "Actions".
+- Make sure "Specific" is checked and "All resources" is unchecked. 
+- Under "distribution", click "Add ARN".
+- This will cause a popup dialog to appear.
+- Enter the distribution ID for the CloudFront distribution created earlier.
+- Click "Add" to complete the popup dialog.
+- Scroll down the page a bit.
+- Expand "Request conditions".
+- Leave "MFA required" and "Source IP" unchecked.
+- This completes permissions for CloudFront.  We must also add one permission for CloudFront.
+- At the bottom of the page, click the "Next: Tags" button.
+- No tags are needed.
+- At the bottom of the page, click the "Next: Review" button.
+- Fill in a name for the policy.  For this demo we use "ContentLibraryDemoPolicy".
+- Fill in the optional description, if desired.
+- At the bottom of the page, click the "Create policy" button.
+
 ### Step 8 - Create Role Mapping Policy to API User.
+
+Need a custom trust policy:
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::123456789012:user/ContentLibraryDemo"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {}
+        }
+    ]
+}
+```
 
 ### Step 9 - Create GitHub Content Library Repository.
 

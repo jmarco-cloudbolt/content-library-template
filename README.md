@@ -270,24 +270,46 @@ Follow these steps as an example:
 
 ### Step 8 - Create Role Mapping Policy to API User.
 
-Need a custom trust policy:
-```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::123456789012:user/ContentLibraryDemo"
-            },
-            "Action": "sts:AssumeRole",
-            "Condition": {}
-        }
-    ]
-}
-```
+Follow these steps as an example:
+- Log into the AWS management console.
+- Use the "search" box next to the "aws" and "Services" button in the upper left corner.
+- Search for "IAM" and click on "IAM" to open it.
+- Note: IAM may also already be in your favorites or recently used list.
+- In the left side bar, make sure "Roles" is selected.
+- Click the "Create Role" button.
+- For the "Select trusted entity" step, check "Custom trust policy".
+- For the trust policy text below replace "123456789012" with your own AWS account number.
+- For the trust policy text bwlow replace "ContentLibraryDemo" with your chosen user name if different.
+- Noting the above two changes, the "Custom trust policy" text will look like:
+  ```
+  {
+      "Version": "2012-10-17",
+        "Statement": [
+          {
+              "Effect": "Allow",
+              "Principal": {
+                  "AWS": "arn:aws:iam::123456789012:user/ContentLibraryDemo"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {}
+          }
+      ]
+  }
+  ```
+- Click the "Next: button at the bottom of the page.
+- In the "Add permissions" step, find the policy we created above by name and check that policy.
+- Nothing needs to be done for "Set permissions boundary - optional".
+- Click the "Next: button at the bottom of the page.
+- In the "Name, review, and create" stop, chose a role name.
+- For this demo we use "ContentLibraryDemoRole".
+- Enter the optional description if desired.
+- Scroll to the bottom.
+- No tags are needed.
+- Click the "Create role" button.
 
 ### Step 9 - Create GitHub Content Library Repository.
+
+### Step 10 - Add the AWS account secret to the GitHub Repository.
 
 ### Step 10 - Create Workflow(s).
 

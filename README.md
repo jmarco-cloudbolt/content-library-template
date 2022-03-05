@@ -212,6 +212,15 @@ Follow these steps as an example:
 
 ### Step 7 - Create AWS Policy for S3 and CloudFront Permissions
 
+The ContentLibrary workflows use the AWS "AssumeRole" command to assign permisisons
+for their AWS API calls.  For this to work, we must first create a policy, then a role
+the user can assume that uses the policy's permisions.  Here we create the policy with
+the minimum set of access rights to make Content Library updates to your S3 bucket and
+to issue CloudFront caching invalidations to "push" the new content for delivery.
+
+The policy itself is not directly used in workflow inputs.  Instead, the workflow
+expects the name of the role to assume. (our next step)
+
 Follow these steps as an example:
 - Log into the AWS management console.
 - Use the "search" box next to the "aws" and "Services" button in the upper left corner.
@@ -270,6 +279,12 @@ Follow these steps as an example:
 
 ### Step 8 - Create Role Mapping Policy to API User.
 
+Once the above policy is created, it is attached to a named role that the IAM API user
+can "assume" in order to execute AWS commands for the workflow.
+
+The Content Library workflows will need the following:
+- Input "aws-content-library-role": The name of the role to assume to execute AWS commands.
+
 Follow these steps as an example:
 - Log into the AWS management console.
 - Use the "search" box next to the "aws" and "Services" button in the upper left corner.
@@ -309,11 +324,84 @@ Follow these steps as an example:
 
 ### Step 9 - Create GitHub Content Library Repository.
 
+No template is needed to create your repository, and it can be public or private.
+However, the "content-library-template" repository (containing this README.md file)
+contains the README, some example workflows, and an exampble content blueprint
+that can be used to test your setup.
+
+Otherwise, simply create your repository under your account and/or organization
+in GitHub.  For now we will stick to the "main" branch with no branch protectoins
+to get the workflow configured.  But there is flexibility in how workflows can be
+added to handle content publication on a per-branch basis, to, for example, publish
+the "develop" branch content to a staging bucket, and "main" branch content to
+the production bucket.
+
+Aadmin access to the new repository will be required for the next step.
+
 ### Step 10 - Add the AWS account secret to the GitHub Repository.
+
+At the very least, the AWS access key secret must be placed in the repository
+action secrets cache so that it is not directly visible to GitHub users.  Only
+workflows have access to these secrets.
+
+To add this secret:
+- Log into GitHub.
+- Open your repository in GitHub.
+- Click on the "Settings" link. (Admin access required)
+- In the left hand sidebar open "Secrets".
+- Under "Secrets" click "Actions".
+- Add a secret called "AWS\_ACCESS\_KEY\_SECRET" with the access key secret obtained above.
+- This access key is visible to workflows as secrets.AWS\_ACCESS\_KEY\_SECRET
+- The name AWS\_ACCESS\_KEY\_SECRET is not mandatory but your workflow should be adjusted accordingly.
 
 ### Step 10 - Create Workflow(s).
 
+In your main branch, push a file ".github/workflows/production.yml" containing:
+```
+name: Generate And Publish Content To Production
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    name: Publish Content To Production
+    uses: CloudBoltSoftware/content-library-action/.github/workflows/generate-and-publish.yml@main
+    secrets:
+      aws-access-key-secret: '${{secrets.AWS_ACCESS_KEY_SECRET}}'
+    with:
+      publish-to: 'Production'
+      aws-default-region: 'AWS_REGION_GOES_HERE'
+      aws-account-id: 'ACCOUNT_ID_GOES_HERE'
+      aws-access-key-id: 'ACCESS_KEY_ID_GOES_HERE'
+      aws-content-library-role: 'ROLE_TO_ASSUME_GOES_HERE'
+      aws-s3-bucket: 'BUCKET_NAME_GOES_HERE'
+      aws-s3-backup-bucket: 'BACKUP_BUCKET_NAME_GOES_HERE'
+      aws-cloudfront-distribution-id: 'CLOUDFRONT_DIST_ID_GOES_HERE'
+
+```
+In the above text, substitute all of the "GOES\_HERE" values with the ones obtained in
+the above steps.
+
+This workflow uses the string "Production" to describe its publication environment
+(since it is the main branch)  However this is just a name.  Adjust to organization
+policy as needed.
+
+Multiple workflows files can be created in .github/workflows, with changes to the
+"on" section to control under which branches and conditions the workflows trigger.
+As an exercise you could create a develop.yml workflow for branch "develop" that
+publishes to a "Staging" environment and bucket.
+
 ### Step 11 - Test Content Creations.
 
-
+If you created your repository using the template above it will contain an example
+content blueprint that should be packages and published by the above workflow once
+it is pushed into "main".  In GitHub, the results can be debugged for incorrect
+credentials or bucket/resource locations by opening the triggered actions in the
+"Actions" tab.  Debugging GitHub actions is beyond the scope of this readme.
 
